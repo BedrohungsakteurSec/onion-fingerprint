@@ -4,6 +4,8 @@ import requests
 import codecs
 from bs4 import BeautifulSoup
 
+path_to_favicon = "favicon.ico"
+
 # Array of onion links to fingerprint
 
 domain_list = ["http://y22arit74fqnnc2pbieq3wqqvkfub6gnlegx3cl6thclos4f7ya7rvad.onion/",
@@ -33,7 +35,7 @@ domain_list = ["http://y22arit74fqnnc2pbieq3wqqvkfub6gnlegx3cl6thclos4f7ya7rvad.
                "http://ymvhtqya23wqpez63gyc3ke4svju3mqsby2awnhd3bk2e65izt7baqad.onion/",
                "http://k6m3fagp4w4wspmdt23fldnwrmknse74gmxosswvaxf3ciasficpenad.onion/",
                "http://lqcjo7esbfog5t4r4gyy7jurpzf6cavpfmc4vkal4k2g4ie66ao5mryd.onion/",
-               "http://qazkxav4zzmt5xwfw6my362jdwhzrcafz7qpd5kugfgx7z7il5lyb6ad.onion/", 
+               "http://qazkxav4zzmt5xwfw6my362jdwhzrcafz7qpd5kugfgx7z7il5lyb6ad.onion/",
                "http://gd5x24pjoan2pddc2fs6jlmnqbawq562d2qyk6ym4peu5ihzy6gd4jad.onion/",
                "http://t43fsf65omvf7grt46wlt2eo5jbj3hafyvbdb7jtr2biyre5v24pebad.onion/",
                "http://okayd5ljzdv4gzrtiqlhtzjbflymfny2bxc2eacej3tamu2nyka7bxad.onion/",
@@ -54,16 +56,20 @@ def get_tor_session():
 
 tor_session = get_tor_session()
 
-# Itterate through onion-link-array
+# Itterate through onion-link-array 
 
 for domain in domain_list:
-    # Make a request to the onion link
-    response = tor_session.get(domain)
-    # Parse the response to BeautifulSoup
-    soup = BeautifulSoup(response.text, 'html.parser')
+    # Make a request and get the favicon
+    response_ico = tor_session.get(f"{domain}{path_to_favicon}")
+    # Make a request a request and get the title
+    response_title = tor_session.get(f"{domain}")
+
     # Encode the favicon with base64
-    favicon = codecs.encode(response.content,"base64")
+    favicon = codecs.encode(response_ico.content,"base64")
     # Hash the base64 output with MurmurHash3 (you can search for this Hash on Shodan) >  https://pypi.org/project/mmh3/
     hash = mmh3.hash(favicon)
+    # Parse the response to BeautifulSoup
+    soup = BeautifulSoup(response_title.text, 'html.parser')
+        
     # Print the onion-link, the murmur-favicon-hash and page title
-    print(f"{domain} = {hash} = {soup.find('title').text}")
+    print(f"http.title:\"{soup.find('title').text}\"\n{domain}\nhttp.favicon.hash:{hash}\n")
